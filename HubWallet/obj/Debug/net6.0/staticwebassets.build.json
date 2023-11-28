@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "8lSBf6rvOiIdWAs+B+IQVk624DoYwjAMgPjcAKE+ABE=",
+  "Source": "HubWallet",
+  "BasePath": "_content/HubWallet",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
