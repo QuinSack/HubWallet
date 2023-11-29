@@ -30,3 +30,13 @@ E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\obj\Debug\net6.0\refint\
 E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\obj\Debug\net6.0\HubWallet.pdb
 E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\obj\Debug\net6.0\HubWallet.genruntimeconfig.cache
 E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\obj\Debug\net6.0\ref\HubWallet.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Humanizer.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Design.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Relational.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Microsoft.Extensions.Caching.Memory.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Npgsql.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+E:\Visual Studio Projects\HubWallet\HubWallet\HubWallet\bin\Debug\net6.0\System.Diagnostics.DiagnosticSource.dll
