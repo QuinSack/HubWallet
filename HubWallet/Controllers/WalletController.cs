@@ -1,5 +1,6 @@
 ﻿using HubWallet.Data;
 using HubWallet.Models;
+using HubWallet.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,45 +11,27 @@ namespace HubWallet.Controllers
     [ApiController]
     public class WalletController : ControllerBase
     {
-        private readonly WalletDbContext _dbContext;
-        public WalletController(WalletDbContext dbContext)
+        private readonly WalletService _walletService;
+
+        public WalletController(WalletService walletService)
         {
-            _dbContext = dbContext;
+            _walletService = walletService;
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Wallet))]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> AddWallet(Wallet wallet)
         {
-            //check for duplicate wallets
-            if(_dbContext.Wallets.Any(w => 
-            w.Owner == wallet.Owner && 
-            w.Type == wallet.Type &&
-            w.AccountNumber == wallet.AccountNumber &&
-            w.AccountScheme == wallet.AccountScheme
-            ))
+            var result = await _walletService.AddWallet(wallet);
+
+            if (!result)
             {
-                return Conflict("Duplicate wallet");
+                return Conflict("Duplicate wallet or maximum wallets per user exceeded");
             }
 
-            //check maximum wallets per user
-            if(_dbContext.Wallets.Count(w => w.Owner == wallet.Owner) >= 5)
-            {
-                return BadRequest("Maximum 5 wallets per user allowed");
-            }
-
-            //store only the first 6 digits of the card number
-            if(wallet.Type == "card" && !string.IsNullOrEmpty(wallet.AccountNumber))
-            {
-                wallet.AccountNumber = wallet.AccountNumber.Substring(0, Math.Min(6, wallet.AccountNumber.Length));
-            }
-
-            _dbContext.Wallets.Add(wallet);
-            await _dbContext.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetWalletById), new {id =  wallet.Id}, wallet);
+            return CreatedAtAction(nameof(GetWalletById), new { id = wallet.Id }, wallet);
         }
 
         [HttpDelete("{id}")]
@@ -56,25 +39,23 @@ namespace HubWallet.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveWallet(int id)
         {
-            var wallet = await _dbContext.Wallets.FindAsync(id);
-            if(wallet == null)
+            var result = await _walletService.RemoveWallet(id);
+
+            if (!result)
             {
                 return NotFound();
             }
-
-            _dbContext.Wallets.Remove(wallet);
-            await _dbContext.SaveChangesAsync();
 
             return NoContent();
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Wallet))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetWalletById(int id)
         {
-            var wallet = await _dbContext.Wallets.FindAsync(id);
-             
+            var wallet = await _walletService.GetWalletById(id);
+
             if (wallet == null)
             {
                 return NotFound();
@@ -83,26 +64,26 @@ namespace HubWallet.Controllers
             return Ok(wallet);
         }
 
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetAllWallets()
+        {
+            var wallets = _walletService.GetAllWallets().ToList();
+            return Ok(wallets);
+        }
+
         [HttpGet("owner/{phoneNumber}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Wallet>))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetWalletsByOwner(string phoneNumber)
         {
-            var wallets = _dbContext.Wallets.Where(w => w.Owner == phoneNumber).ToList();
+            var wallets = _walletService.GetWalletsByOwner(phoneNumber).ToList();
 
             if (wallets.Count == 0)
             {
                 return NotFound($"No wallets found for owner with phone number {phoneNumber}");
             }
 
-            return Ok(wallets);
-        }
-
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Wallet>))]
-        public async Task<IActionResult> GetAllWallets()
-        {
-            var wallets = await _dbContext.Wallets.ToListAsync();
             return Ok(wallets);
         }
     }
