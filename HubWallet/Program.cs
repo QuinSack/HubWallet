@@ -1,4 +1,5 @@
 using HubWallet.Data;
+using HubWallet.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<WalletDbContext>(
     options => options.UseNpgsql(builder.Configuration.GetConnectionString("HubtelServer")));
 builder.Services.AddScoped<WalletDbContext>();
+builder.Services.AddScoped<WalletService>();
 
 var app = builder.Build();
 
