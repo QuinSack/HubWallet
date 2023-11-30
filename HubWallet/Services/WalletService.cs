@@ -2,6 +2,7 @@
 
 using HubWallet.Data;
 using HubWallet.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,14 +18,19 @@ public class WalletService
 
     public async Task<bool> AddWallet(Wallet wallet)
     {
-        if (_dbContext.Wallets.Any(w =>
-            w.Owner == wallet.Owner &&
-            w.Type == wallet.Type &&
-            w.AccountNumber == wallet.AccountNumber &&
-            w.AccountScheme == wallet.AccountScheme))
+        if (await AccountNumberExists(wallet?.AccountNumber))
         {
-            return false; // Duplicate wallet
+            return false; //Duplicate wallet
         }
+
+        //if (_dbContext.Wallets.Any(w =>
+        //    w.Owner == wallet.Owner &&
+        //    w.Type == wallet.Type &&
+        //    w.AccountNumber == wallet.AccountNumber &&
+        //    w.AccountScheme == wallet.AccountScheme))
+        //{
+        //    return false; // Duplicate wallet
+        //}
 
         if (_dbContext.Wallets.Count(w => w.Owner == wallet.Owner) >= 5)
         {
@@ -68,5 +74,10 @@ public class WalletService
     public IQueryable<Wallet> GetWalletsByOwner(string phoneNumber)
     {
         return _dbContext.Wallets.Where(w => w.Owner == phoneNumber);
+    }
+
+    public async Task<bool> AccountNumberExists(string accountNumber)
+    {
+        return await _dbContext.Wallets.AnyAsync(w => w.AccountNumber == accountNumber);
     }
 }

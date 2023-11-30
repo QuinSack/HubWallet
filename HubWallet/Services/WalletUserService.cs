@@ -11,11 +11,14 @@ namespace HubWallet.Services
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IConfiguration _config;
 
-        public WalletUserService(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+
+        public WalletUserService(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IConfiguration config)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _config = config;
         }
 
         public async Task<bool> RegisterUser(WalletUser walletUser)
@@ -51,46 +54,22 @@ namespace HubWallet.Services
 
         private string GenerateJwtToken(IdentityUser user)
         {
-            var keys = Encoding.ASCII.GetBytes("djdjks-djk2393-djksd-338932jds-vbkwjje-39393");
-            var issuer = "HUBTELWALLET";
-            var audience = "JWTServicePostmanClient";
-
-            //var claims = new List<Claim>
-            //{
-            //    new Claim(ClaimTypes.Name, user.UserName),
-            //    new Claim(ClaimTypes.NameIdentifier, user.Id),
-            //    // Add additional claims as needed
-            //};
-
-            //var securityTokenDescriptor = new SecurityTokenDescriptor
-            //{
-            //    Subject = new ClaimsIdentity(claims),
-            //    Expires = DateTime.UtcNow.AddHours(1), // Token expiration time
-            //    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-            //    Issuer = issuer,
-            //    Audience = audience,
-            //};
-
-            //var tokenHandler = new JwtSecurityTokenHandler();
-            //var token = tokenHandler.CreateToken(securityTokenDescriptor);
-
-            //return tokenHandler.WriteToken(token);
             List<Claim> claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("djdjks-djk2393-djksd-338932jds-vbkwjje-39393"));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                _config.GetSection("JwtConfig:Secret").Value!));
 
             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
             var token = new JwtSecurityToken(
-                 issuer,
-                audience,
+                 _config["JwtConfig:Issuer"],
+                _config["JwtConfig:Audience"],
                 claims: claims,
-                //expires: DateTime.UtcNow.AddSeconds(double.Parse(_config.GetSection("JwtConfig:Expires").Value!)),
+                expires: DateTime.UtcNow.AddMinutes(60),
                 signingCredentials: cred
                 );
 
