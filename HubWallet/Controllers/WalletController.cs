@@ -65,6 +65,10 @@ namespace HubWallet.Controllers
             //{
             //    return BadRequest("Invalid wallet type. Allowed types are 'Card' or 'Momo'.Thank you");
             //}
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             bool accountNumberExists = await _walletService.AccountNumberExists(wallet?.AccountNumber);
             if (accountNumberExists)
