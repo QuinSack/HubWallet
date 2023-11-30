@@ -8,17 +8,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<WalletDbContext>(
-    options => options.UseNpgsql(builder.Configuration.GetConnectionString("HubtelServer")));
-builder.Services.AddScoped<WalletDbContext>();
-builder.Services.AddScoped<WalletService>();
-builder.Services.AddScoped<WalletUserService>();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.User.RequireUniqueEmail = false;
@@ -44,22 +34,36 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-    .AddJwtBearer(options =>
+.AddJwtBearer(jwt =>
+{
+    var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtConfig:Secret"]);
+    jwt.SaveToken = true;
+    jwt.RequireHttpsMetadata = false;
+    jwt.TokenValidationParameters = new TokenValidationParameters
     {
-        var key = Encoding.ASCII.GetBytes("djdjks-djk2393-djksd-338932jds-vbkwjje-39393");
-        options.SaveToken = true;
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidIssuer = "HUBTELWALLET",
-            ValidAudience = "JWTServicePostmanClient"
-        };
-    });
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["JwtConfig:Audience"],
+        ValidIssuer = builder.Configuration["JwtConfig:Issuer"],
+        ValidateLifetime = true,
+
+    };
+
+});
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<WalletDbContext>(
+    options => options.UseNpgsql(builder.Configuration.GetConnectionString("HubtelServer")));
+builder.Services.AddScoped<WalletDbContext>();
+builder.Services.AddScoped<WalletService>();
+builder.Services.AddScoped<WalletUserService>();
 
 var app = builder.Build();
 

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HubWallet.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/wallets")]
     [ApiController]
     public class WalletController : ControllerBase
@@ -55,26 +55,37 @@ namespace HubWallet.Controllers
         }
 
         //[Authorize]
-        [HttpPost]
+        [HttpPost("add")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> AddWallet(Wallet wallet)
+        public async Task<IActionResult> AddWallet([FromBody] Wallet wallet)
         {
+            //if (wallet.Type != WalletType.Card && wallet.Type != WalletType.Momo)
+            //{
+            //    return BadRequest("Invalid wallet type. Allowed types are 'Card' or 'Momo'.Thank you");
+            //}
+
+            bool accountNumberExists = await _walletService.AccountNumberExists(wallet?.AccountNumber);
+            if (accountNumberExists)
+            {
+                return Conflict($"Wallet with AccountNumber {wallet.AccountNumber} already exists");
+            }
+
             var result = await _walletService.AddWallet(wallet);
 
             if (!result)
             {
-                return Conflict("Duplicate wallet or maximum wallets per user exceeded");
+                return Conflict("Duplicate wallet or maximum wallets per user exceeded!");
             }
 
             return CreatedAtAction(nameof(GetWalletById), new { id = wallet.Id }, wallet);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("remove/{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> RemoveWallet(int id)
+        public async Task<IActionResult> RemoveWallet([FromRoute] int id)
         {
             var result = await _walletService.RemoveWallet(id);
 
@@ -86,10 +97,10 @@ namespace HubWallet.Controllers
             return NoContent();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("get/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetWalletById(int id)
+        public async Task<IActionResult> GetWalletById([FromRoute] int id)
         {
             var wallet = await _walletService.GetWalletById(id);
 
@@ -101,7 +112,7 @@ namespace HubWallet.Controllers
             return Ok(wallet);
         }
 
-        [HttpGet]
+        [HttpGet("getAll")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetAllWallets()
         {
@@ -109,10 +120,10 @@ namespace HubWallet.Controllers
             return Ok(wallets);
         }
 
-        [HttpGet("owner/{phoneNumber}")]
+        [HttpGet("getByOwner/{phoneNumber}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetWalletsByOwner(string phoneNumber)
+        public IActionResult GetWalletsByOwner([FromRoute] string phoneNumber)
         {
             var wallets = _walletService.GetWalletsByOwner(phoneNumber).ToList();
 
