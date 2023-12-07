@@ -1,10 +1,12 @@
 ﻿using HubWallet.Data;
 using HubWallet.Models;
 using HubWallet.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace HubWallet.Controllers
 {
@@ -54,6 +56,13 @@ namespace HubWallet.Controllers
             return Unauthorized("Invalid credentials");
         }
 
+        //[HttpPost("logout")]
+        //public async Task<IActionResult> Logout()
+        //{
+        //    await HttpContext.SignOutAsync("Bearer");
+        //    return Ok("Logout successful");
+        //}
+
         //[Authorize]
         [HttpPost("add")]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -65,6 +74,14 @@ namespace HubWallet.Controllers
             //{
             //    return BadRequest("Invalid wallet type. Allowed types are 'Card' or 'Momo'.Thank you");
             //}
+            var phoneNumber = User.FindFirstValue(ClaimTypes.Name);
+            if (phoneNumber == null)
+            {
+                return Unauthorized("Invalid user!");
+            }
+
+            wallet.Owner = phoneNumber;
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -73,14 +90,14 @@ namespace HubWallet.Controllers
             bool accountNumberExists = await _walletService.AccountNumberExists(wallet?.AccountNumber);
             if (accountNumberExists)
             {
-                return Conflict($"Wallet with AccountNumber {wallet.AccountNumber} already exists");
+                return Conflict($"Wallet with AccountNumber {wallet.AccountNumber} already exists"); //Duplicate wallet
             }
 
             var result = await _walletService.AddWallet(wallet);
 
             if (!result)
             {
-                return Conflict("Duplicate wallet or maximum wallets per user exceeded!");
+                return Conflict("Maximum wallets per user exceeded!");
             }
 
             return CreatedAtAction(nameof(GetWalletById), new { id = wallet.Id }, wallet);
@@ -91,6 +108,18 @@ namespace HubWallet.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveWallet([FromRoute] int id)
         {
+            var wallet = await _walletService.GetWalletById(id);
+            if (wallet == null)
+            {
+                return NotFound();
+            }
+
+            var phoneNumber = User.FindFirstValue(ClaimTypes.Name);
+            if (wallet.Owner != phoneNumber)
+            {
+                return Forbid("You do not have permission to remove this wallet");
+            }
+
             var result = await _walletService.RemoveWallet(id);
 
             if (!result)
@@ -113,6 +142,12 @@ namespace HubWallet.Controllers
                 return NotFound();
             }
 
+            var phoneNumber = User.FindFirstValue(ClaimTypes.Name);
+            if (wallet.Owner != phoneNumber)
+            {
+                return Forbid("You do not have permission to access the requested wallet");
+            }
+
             return Ok(wallet);
         }
 
@@ -120,23 +155,26 @@ namespace HubWallet.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetAllWallets()
         {
-            var wallets = _walletService.GetAllWallets().ToList();
-            return Ok(wallets);
-        }
-
-        [HttpGet("getByOwner/{phoneNumber}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetWalletsByOwner([FromRoute] string phoneNumber)
-        {
+            //var wallets = _walletService.GetAllWallets().ToList();
+            //return Ok(wallets);
+            var phoneNumber = User.FindFirstValue(ClaimTypes.Name);
             var wallets = _walletService.GetWalletsByOwner(phoneNumber).ToList();
-
-            if (wallets.Count == 0)
-            {
-                return NotFound($"No wallets found for owner with phone number {phoneNumber}");
-            }
-
             return Ok(wallets);
         }
+
+        //[HttpGet("getByOwner/{phoneNumber}")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status404NotFound)]
+        //public IActionResult GetWalletsByOwner([FromRoute] string phoneNumber)
+        //{
+        //    var wallets = _walletService.GetWalletsByOwner(phoneNumber).ToList();
+
+        //    if (wallets.Count == 0)
+        //    {
+        //        return NotFound($"No wallets found for owner with phone number {phoneNumber}");
+        //    }
+
+        //    return Ok(wallets);
+        //}
     }
 }
