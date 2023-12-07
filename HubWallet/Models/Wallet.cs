@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace HubWallet.Models
 {
@@ -15,6 +16,8 @@ namespace HubWallet.Models
         public DateTime CreatedAt { get; set; }
         [RegularExpression("^[0-9]+$", ErrorMessage = "Owner must be a phone number.")]
         public string? Owner {  get; set; }
+        //public string UserId {  get; set; }
+        //public IdentityUser User { get; set; }
     }
 
     //public enum WalletType

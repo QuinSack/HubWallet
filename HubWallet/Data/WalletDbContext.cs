@@ -13,5 +13,16 @@ namespace HubWallet.Data
         }
 
         public DbSet<Wallet> Wallets { get; set; }
+
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    base.OnModelCreating(modelBuilder);
+
+        //    modelBuilder.Entity<Wallet>()
+        //        .HasOne(w => w.User)
+        //        .WithMany(u => u.Wallets)
+        //        .HasForeignKey(w => w.)
+
+        //}
     }
 }
